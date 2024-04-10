@@ -1,9 +1,11 @@
-import { View, Button } from '@tarojs/components'
-import Taro, { useState } from '@tarojs/taro'
+import { View, Button, Text } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import './index.scss'
 import { aiRecognize } from '@/utils/ai';
+import { useState } from 'react';
 
 export default function Index() {
+  const [result, setResult] = useState<string>();
 
   // 选择图片
   const chooseImage = () => {
@@ -15,21 +17,26 @@ export default function Index() {
         success: (res) => {
           // 将图片转换成 base64
           const base64 = convertToBase64(res.tempFilePaths[0]);
-          resolve(base64);
+          resolve(String(base64));
         }
       });
 
     })
   };
 
+  const removeBase64Header = (base64: string) => {
+    if (!base64) return base64;
+    return base64.replace(/^data:image\/(jpeg|png);base64,/, '');;
+  }
+
   const convertToBase64 = (imgFilePath: string) => {
-    return new Promise<string>((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       Taro.getFileSystemManager().readFile({
         filePath: imgFilePath,
         encoding: 'base64',
         success: (res) => {
-          console.log('base64:', res.data);
-          resolve(res.data);
+          console.log('base64 ---->', res.data);
+          resolve(removeBase64Header(String(res.data)));
         },
         fail: (err) => {
           reject(err);
@@ -40,12 +47,14 @@ export default function Index() {
 
   const handleClick = async () => {
     const base64 = await chooseImage();
-    aiRecognize(base64);
+    const result = await aiRecognize(base64);
+    setResult(result);
   }
 
 
   return (
     <View className='index'>
+      <Text>{result}</Text>
       <Button onClick={handleClick}>点我识车</Button>
     </View>
   )
