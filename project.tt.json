@@ -1,0 +1,9 @@
+{
+  "miniprogramRoot": "./",
+  "projectname": "ai-vision",
+  "appid": "testAppId",
+  "setting": {
+    "es6": false,
+    "minified": false
+  }
+}
