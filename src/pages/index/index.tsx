@@ -1,12 +1,9 @@
-import { View, Button, Text } from '@tarojs/components'
+import { View, Button } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import { aiRecognize } from '@/utils/ai';
-import { useState } from 'react';
 
 export default function Index() {
-  const [result, setResult] = useState<string>();
-
   // 选择图片
   const chooseImage = () => {
     return new Promise<string>((resolve) => {
@@ -50,7 +47,11 @@ export default function Index() {
       // 开始识别
       const result = await aiRecognize(base64);
       // 识别的结果
-      setResult(result);
+      Taro.showModal({
+        title: '识别出来了',
+        content: result,
+        showCancel: false,
+      })
     } catch (error) {
       console.error(error);
       Taro.showToast({
@@ -64,8 +65,6 @@ export default function Index() {
 
   return (
     <View className='page'>
-      <Text>{result}</Text>
-
       <Button
         className='ai-btn'
         onClick={handleClick}
