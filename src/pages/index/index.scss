@@ -1,0 +1,25 @@
+@import "../../styles/common.scss";
+
+.page {
+    @extend .flex-center-container;
+    width: 100%;
+    height: 100vh;
+    background-color: #0f0f0f;
+}
+
+.ai-btn {
+    @extend .flex-center-container;
+    width: 300rpx;
+    height: 300rpx;
+    color: white;
+    background-color: #2ecc71;
+    border-radius: 150rpx;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 添加一个阴影效果 */
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* 添加按钮背景颜色过渡动画 */
+
+    &:hover {
+        background-color: #27ae60; /* 鼠标悬停时，按钮背景颜色变化 */
+    }
+}
