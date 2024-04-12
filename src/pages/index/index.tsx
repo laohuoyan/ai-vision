@@ -5,6 +5,7 @@ import { aiRecognize } from '@/utils/ai';
 import { useState } from 'react';
 
 export default function Index() {
+  const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string>();
 
   // 选择图片
@@ -14,29 +15,23 @@ export default function Index() {
         count: 1, // 最多选择一张图片
         sizeType: ['original', 'compressed'], // 可以指定是原图还是压缩图，默认二者都有
         sourceType: ['album', 'camera'], // 可以指定来源是相册还是相机，默认二者都有
-        success: (res) => {
+        success: async (res) => {
           // 将图片转换成 base64
-          const base64 = convertToBase64(res.tempFilePaths[0]);
-          resolve(String(base64));
+          const base64 = await convertToBase64(res.tempFilePaths[0]);
+          resolve(base64);
         }
       });
 
     })
   };
 
-  const removeBase64Header = (base64: string) => {
-    if (!base64) return base64;
-    return base64.replace(/^data:image\/(jpeg|png);base64,/, '');;
-  }
-
   const convertToBase64 = (imgFilePath: string) => {
-    return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
       Taro.getFileSystemManager().readFile({
         filePath: imgFilePath,
         encoding: 'base64',
         success: (res) => {
-          console.log('base64 ---->', res.data);
-          resolve(removeBase64Header(String(res.data)));
+          resolve(res.data.toString());
         },
         fail: (err) => {
           reject(err);
@@ -47,8 +42,21 @@ export default function Index() {
 
   const handleClick = async () => {
     const base64 = await chooseImage();
-    const result = await aiRecognize(base64);
-    setResult(result);
+    try {
+      // loading
+      Taro.showLoading({ title: '努力识别中...' })
+      // 开始识别
+      const result = await aiRecognize(base64);
+      // 识别的结果
+      setResult(result);
+    } catch (error) {
+      console.error(error);
+      Taro.showToast({
+        title: JSON.stringify(error),
+      })
+    } finally {
+      Taro.hideLoading()
+    }
   }
 
 

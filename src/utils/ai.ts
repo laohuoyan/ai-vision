@@ -13,7 +13,6 @@ export function getAccessToken() {
             method: 'POST',
             url: 'https://aip.baidubce.com/oauth/2.0/token?grant_type=client_credentials&client_id=' + AK + '&client_secret=' + SK,
             success(response: any) {
-                console.log('get-access-token res: ', response.data.access_token);
                 resolve(response.data.access_token)
             },
             fail(error) {
@@ -24,6 +23,25 @@ export function getAccessToken() {
 }
 
 
+export interface AIRecognizeData {
+    // created: 1712928475
+    // id: "as-gfycsbga6g"
+    // is_safe: 1
+    // object: "chat.completion"
+    // result: "This is a white sports car.↵"
+    // usage: {prompt_tokens: 28, completion_tokens: 7, total_tokens: 35}
+    created: number;
+    id: string;
+    is_safe: 0 | 1;
+    object: string;
+    result: string;
+    usage: {
+      prompt_tokens: number;
+      completion_tokens: number;
+      total_tokens: number;
+    },
+}
+
 /**
  * ai 识别
  * @param imageBase64 
@@ -32,17 +50,20 @@ export function getAccessToken() {
 export async function aiRecognize(imageBase64: string) {
     const accessToken = await getAccessToken();
 
-    return new Promise<string>((resolve) => {
+    return new Promise<string>((resolve, reject) => {
         Taro.request({
             method: 'POST',
             url: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/image2text/fuyu_8b?access_token=' + accessToken,
             data: {
-                prompt: "这辆车是什么型号的",
+                prompt: "这是什么车，请用中文返回结果，只需要回复一个名词",
                 image: imageBase64,
             },
-            success: function (response: any) {
-                console.log(response.data);
-                resolve(response.data);
+            success(response: { data: AIRecognizeData }) {
+                resolve(response.data.result);
+            },
+            fail(error) {
+                console.log('error ->>>', error);
+                reject(error);
             }
         });
 
