@@ -1,7 +1,12 @@
+/**
+ *  百度AI 示例代码：https://console.bce.baidu.com/tools/?u=dhead#/api?product=AI&project=%E5%9B%BE%E5%83%8F%E8%AF%86%E5%88%AB&parent=%E8%BD%A6%E8%BE%86%E5%88%86%E6%9E%90&api=rest%2F2.0%2Fimage-classify%2Fv1%2Fcar&method=post
+ */
+
 import Taro from '@tarojs/taro';
 
-const AK = "7qCK63Mvodk5zZrKzi9FZITE"
-const SK = "liiTuc2f8hB5Zo9olCB3GjN2lFY7dPj5"
+// 下面是错误的AK、SK
+const AK = "xgfltmYhBviXw5l12bPx1P9EQtK"
+const SK = "sgql3mtJEwgeLPbVWutEeTSP14vPXGi7Fn8"
 
 /**
  * 使用 AK，SK 生成鉴权签名（Access Token）
@@ -23,23 +28,41 @@ export function getAccessToken() {
 }
 
 
+// 千帆大模型
+// export interface AIRecognizeData {
+//     // created: 1712928475
+//     // id: "as-gfycsbga6g"
+//     // is_safe: 1
+//     // object: "chat.completion"
+//     // result: "This is a white sports car.↵"
+//     // usage: {prompt_tokens: 28, completion_tokens: 7, total_tokens: 35}
+//     created: number;
+//     id: string;
+//     is_safe: 0 | 1;
+//     object: string;
+//     result: string;
+//     usage: {
+//       prompt_tokens: number;
+//       completion_tokens: number;
+//       total_tokens: number;
+//     },
+// }
+
+// 可能的结果
+export interface AIRecognizeItem {
+    /** 车型上市年 */
+    year: string;
+    /** 车型 */
+    name: string;
+    /** 预测分 */
+    score: number;
+}
+
+// 图片识别 - 车型识别
 export interface AIRecognizeData {
-    // created: 1712928475
-    // id: "as-gfycsbga6g"
-    // is_safe: 1
-    // object: "chat.completion"
-    // result: "This is a white sports car.↵"
-    // usage: {prompt_tokens: 28, completion_tokens: 7, total_tokens: 35}
-    created: number;
-    id: string;
-    is_safe: 0 | 1;
-    object: string;
-    result: string;
-    usage: {
-      prompt_tokens: number;
-      completion_tokens: number;
-      total_tokens: number;
-    },
+    /** 颜色，比如 白色 */
+    color_result: string;
+    result: Array<AIRecognizeItem>
 }
 
 /**
@@ -53,13 +76,16 @@ export async function aiRecognize(imageBase64: string) {
     return new Promise<string>((resolve, reject) => {
         Taro.request({
             method: 'POST',
-            url: 'https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/image2text/fuyu_8b?access_token=' + accessToken,
+            url: 'https://aip.baidubce.com/rest/2.0/image-classify/v1/car?access_token=' + accessToken,
+            header: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
             data: {
-                prompt: "这是什么车，请用中文返回结果，只需要回复一个名词",
                 image: imageBase64,
             },
             success(response: { data: AIRecognizeData }) {
-                resolve(response.data.result);
+                resolve(formatResult(response.data));
             },
             fail(error) {
                 console.log('error ->>>', error);
@@ -68,4 +94,11 @@ export async function aiRecognize(imageBase64: string) {
         });
 
     })
+}
+
+export function formatResult(result: AIRecognizeData) {
+    const firstItem = result.result?.[0];
+    if (!firstItem) return '未识别';
+
+    return `${result.color_result} ${firstItem.name} (${firstItem.year}年)`;
 }
